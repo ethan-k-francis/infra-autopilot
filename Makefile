@@ -85,6 +85,30 @@ clean: ## Remove build artifacts and temp files
 	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
 # -----------------------------------------------------------------------------
+# Local CI parity checks — run before opening PRs
+# -----------------------------------------------------------------------------
+
+.PHONY: lint
+lint: ## Run pre-commit hooks across the repository
+	pre-commit run --all-files
+
+.PHONY: ci-security
+ci-security: ## Run local security scan parity (Trivy)
+	trivy fs --severity HIGH,CRITICAL --exit-code 1 .
+
+.PHONY: pr-attribution-check
+pr-attribution-check: ## Check branch commits and optional PR text for forbidden attribution
+	@chmod +x .github/scripts/attribution-guard.sh
+	@.github/scripts/attribution-guard.sh \
+		--base-ref origin/main \
+		$${PR_TITLE:+--title "$${PR_TITLE}"} \
+		$${PR_BODY_FILE:+--body-file "$${PR_BODY_FILE}"}
+
+.PHONY: ci
+ci: lint ci-security pr-attribution-check ## Run local CI parity checks before PR
+	@echo "Local CI checks passed."
+
+# -----------------------------------------------------------------------------
 # Help — list available targets
 # -----------------------------------------------------------------------------
 

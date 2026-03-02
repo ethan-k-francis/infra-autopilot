@@ -80,6 +80,12 @@ make demo
 make cluster-down
 ```
 
+Before opening a PR, run local parity checks:
+
+```bash
+make ci
+```
+
 ---
 
 ## Tech Stack
